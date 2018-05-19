@@ -3,8 +3,13 @@ import pigpio
 from utils import bytes_to_hex_str
 from led import LED
 from utils import my_logger
+import csv
+import os
+from datetime import datetime
+from threading import Timer
 
 logger = my_logger(__name__, level="DEBUG")
+root_path = os.path.dirname(os.path.abspath(__file__))
 
 class AS3935(object):
     CE = 16
@@ -16,8 +21,7 @@ class AS3935(object):
     def __init__(self, pi):
         self.pi = pi
         self.led = LED(self.pi)
-        self.led.all_on()
-        
+
         # init SPI with mode 1, 10 KHz
         try:
             self.pi.bb_spi_open(AS3935.CE, AS3935.MISO, AS3935.MOSI, AS3935.SCLK, 10000, 1)
@@ -29,7 +33,6 @@ class AS3935(object):
         # Sets all registers in default mode
         self.write(0x3C, 0x96)
         sleep(1)
-        self.led.all_off()
 
         # choose occasion
         self.set_indoor()
@@ -45,7 +48,9 @@ class AS3935(object):
         self.int = self.pi.callback(
             AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
 
-    
+        # import pdb; pdb.set_trace()
+
+
     def __del__(self):
         self.pi.bb_spi_close(AS3935.CE)        
 
@@ -53,7 +58,6 @@ class AS3935(object):
         # read interrupt resigter to see what event happennig
         # REG0x03[3:0]
         logger.debug('AS3935 interrupt callback')
-        self.led.on('GREEN')
         res = self.get_INT()
 
         if res == 0x08:
@@ -61,20 +65,18 @@ class AS3935(object):
             # todo:
             logger.debug('Lightning detected!')
             self.led.on('RED')
+            self.record(once=True)
     
         elif res == 0x04:
             # INT_D: Disturber detected
             logger.debug('Disturber detected!')
-            self.led.on('YELLOW')
 
         elif res == 0x01:
             # INT_NH: Noise level too high
             logger.debug('Noise level too high!')
-            self.led.on('YELLOW')
 
-        input('press any key to continue')
-        sleep(1)
-        self.led.all_off()
+        sleep(0.5)
+        # self.led.all_off()
 
     def read(self, register):
         register = 0x40|register
@@ -154,4 +156,4 @@ class AS3935(object):
         res = self.read(register)
         self.write(0, 0b11011101&res)
         return 1
-        
+
