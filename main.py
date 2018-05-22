@@ -54,9 +54,7 @@ def main():
 
     # create observation task
     obs_path = os.path.join(root_path, 'observation')
-    obs_fields = ['datetime', 'temperature', 'humidity', 'pressure', 'lightning distance']
-    obs_writer = None
-    obs_file = None
+    obs_fields = ['datetime', 'temperature(℃)', 'humidity(%)', 'pressure(mbar)', 'lightning distance(KM)', 'events']
     os.makedirs(obs_path, exist_ok=True)
 
     def monitor():
@@ -64,24 +62,26 @@ def main():
         temperatue, pressure = ms8607.get_temperature_pressure()
         humidity = ms8607.get_humidity()
         distance = as3935.get_distance()
+        events = as3935.get_INT()
         now = datetime.now()
-        data = [now.strftime('%Y%m%d%H%M%S'),temperatue, pressure, humidity, distance]
-        logger(data)
+        data = [now.strftime('%Y%m%d%H%M%S'),temperatue,  humidity, pressure, distance, events]
+        logger.debug(data)
         # led.off('GREEN')
 
         # write into file
+        nonlocal obs_path, obs_fields
         f_name = now.strftime('%Y%m%d') + '.csv'
         f_path = os.path.join(obs_path, f_name)
         if not os.path.exists(f_path):
-            if obs_file is not None:
-                obs_file.close()
-            obs_file = open(f_path, 'a')
-            obs_writer = csv.writer(obs_file)
-            obs_writer.writerow(obs_fields)
+            with open(f_path, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(obs_fields)
+                writer.writerow(data)
         else:
-            obs_writer.writerow(data)
-
-        Timer(10, monitor).start()
+            with open(f_path, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(data)
+        Timer(60, monitor).start()
 
     monitor()
 
@@ -97,5 +97,5 @@ def main():
     # stop pi
     pi.stop()
 
-
-main()
+if __name__ == '__main__':
+    main()

@@ -42,13 +42,16 @@ class AS3935(object):
 
         # init IRQ for interrupts
         # set IRQ pull down as default status, as IRQ goes high for interrupts
-        self.pi.set_pull_up_down(AS3935.IRQ, pigpio.PUD_DOWN)
+        # self.pi.set_pull_up_down(AS3935.IRQ, pigpio.PUD_DOWN)
 
-        # init lightning interrupt
-        self.int = self.pi.callback(
-            AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
+        if 0:
+            # init lightning interrupt
+            self.int = self.pi.callback(
+                AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
+            sleep(0.5)
+            # read INT register once to reset IRQ bit
+            self.get_INT()
 
-        # import pdb; pdb.set_trace()
 
 
     def __del__(self):
@@ -65,8 +68,7 @@ class AS3935(object):
             # todo:
             logger.debug('Lightning detected!')
             self.led.on('RED')
-            self.record(once=True)
-    
+
         elif res == 0x04:
             # INT_D: Disturber detected
             logger.debug('Disturber detected!')
@@ -74,9 +76,10 @@ class AS3935(object):
         elif res == 0x01:
             # INT_NH: Noise level too high
             logger.debug('Noise level too high!')
+            self.led.on('YELLOW')
 
         sleep(0.5)
-        # self.led.all_off()
+        self.led.all_off()
 
     def read(self, register):
         register = 0x40|register
