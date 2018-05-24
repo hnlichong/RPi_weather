@@ -53,37 +53,61 @@ def main():
     as3935 = AS3935(pi)
 
     # create observation task
-    obs_path = os.path.join(root_path, 'observation')
-    obs_fields = ['datetime', 'temperature(℃)', 'humidity(%)', 'pressure(mbar)', 'lightning distance(KM)', 'events']
-    os.makedirs(obs_path, exist_ok=True)
+    env_path = os.path.join(root_path, 'env_data')
+    env_fields = ['datetime', 'temperature(℃)', 'humidity(%)', 'pressure(mbar)']
+    lightning_path = os.path.join(root_path, 'lightning_data')
+    lightning_fields = ['datetime', 'events', 'distance(KM)']
+    os.makedirs(env_path, exist_ok=True)
+    os.makedirs(lightning_path, exist_ok=True)
 
-    def monitor():
+    def env_monitor(time):
+        # nonlocal env_path, env_fields
         # led.on('GREEN')
         temperatue, pressure = ms8607.get_temperature_pressure()
         humidity = ms8607.get_humidity()
-        distance = as3935.get_distance()
-        events = as3935.get_INT()
         now = datetime.now()
-        data = [now.strftime('%Y%m%d%H%M%S'),temperatue,  humidity, pressure, distance, events]
+        data = [now.strftime('%Y%m%d%H%M%S'), temperatue, humidity, pressure]
         logger.debug(data)
         # led.off('GREEN')
 
         # write into file
-        nonlocal obs_path, obs_fields
         f_name = now.strftime('%Y%m%d') + '.csv'
-        f_path = os.path.join(obs_path, f_name)
+        f_path = os.path.join(env_path, f_name)
         if not os.path.exists(f_path):
             with open(f_path, 'a') as f:
                 writer = csv.writer(f)
-                writer.writerow(obs_fields)
+                writer.writerow(env_fields)
                 writer.writerow(data)
         else:
             with open(f_path, 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow(data)
-        Timer(60, monitor).start()
+        Timer(time, env_monitor, [time]).start()
 
-    monitor()
+    def lightning_monitor(time):
+        distance = as3935.get_distance()
+        events = as3935.get_INT()
+        now = datetime.now()
+        data = [now.strftime('%Y%m%d%H%M%S'), events, distance]
+        logger.debug(data)
+        # led.off('GREEN')
+
+        # write into file
+        f_name = now.strftime('%Y%m%d') + '.csv'
+        f_path = os.path.join(lightning_path, f_name)
+        if not os.path.exists(f_path):
+            with open(f_path, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(lightning_fields)
+                writer.writerow(data)
+        else:
+            with open(f_path, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(data)
+        Timer(time, lightning_monitor, [time]).start()
+
+    env_monitor(60)
+    lightning_monitor(1)
 
     while 1:
         pass
@@ -96,6 +120,7 @@ def main():
 
     # stop pi
     pi.stop()
+
 
 if __name__ == '__main__':
     main()

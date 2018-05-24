@@ -174,7 +174,24 @@ class WeatherData(object):
             X_tmp, y_tmp, test_size=0.5, random_state=23)
         print("Training instances   {}, Training features   {}".format(X_train.shape[0], X_train.shape[1]))  
         print("Validation instances {}, Validation features {}".format(X_val.shape[0], X_val.shape[1]))  
-        print("Testing instances    {}, Testing features    {}".format(X_test.shape[0], X_test.shape[1]))  
+        print("Testing instances    {}, Testing features    {}".format(X_test.shape[0], X_test.shape[1]))
+
+    #
+    # def tree(self):
+    #     from sklearn import tree
+    #
+    #     # Assumed you have, X (predictor) and Y (target) for training data set and x_test(predictor) of test_dataset
+    #     # Create tree object
+    #     model = tree.DecisionTreeClassifier(
+    #         criterion='gini')  # for classification, here you can change the algorithm as gini or entropy (information gain) by default it is gini
+    #
+    #     # model = tree.DecisionTreeRegressor() for regression
+    #     # Train the model using the training sets and check score
+    #     model.fit(X, y)
+    #     model.score(X, y)
+    #
+    #     # Predict Output
+    #     predicted = model.predict(x_test)
     
 
 

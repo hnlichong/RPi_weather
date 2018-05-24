@@ -35,7 +35,7 @@ class AS3935(object):
         sleep(1)
 
         # choose occasion
-        self.set_indoor()
+        self.set_outdoor()
 
         # Antenna Tuning
         self.tunning()
@@ -44,13 +44,12 @@ class AS3935(object):
         # set IRQ pull down as default status, as IRQ goes high for interrupts
         # self.pi.set_pull_up_down(AS3935.IRQ, pigpio.PUD_DOWN)
 
-        if 0:
-            # init lightning interrupt
-            self.int = self.pi.callback(
-                AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
-            sleep(0.5)
-            # read INT register once to reset IRQ bit
-            self.get_INT()
+        # init lightning interrupt
+        self.int = self.pi.callback(
+            AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
+        sleep(0.5)
+        # read INT register once to reset IRQ bit
+        self.get_INT()
 
 
 
