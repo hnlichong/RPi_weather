@@ -36,9 +36,14 @@ class AS3935(object):
 
         # choose occasion
         self.set_outdoor()
+        # self.set_indoor()
 
         # Antenna Tuning
         self.tunning()
+
+        # increase spike detect efficiency
+        self.write(0x01, 0b100000)
+        self.write(0x02, 0b11000000)
 
         # init IRQ for interrupts
         # set IRQ pull down as default status, as IRQ goes high for interrupts
@@ -124,7 +129,6 @@ class AS3935(object):
         res = self.read(0x08)
         self.write(0x08, 0xF0&res|tun_cap)
         logger.debug('LCO tunning ok, tun_cap = {}'.format(tun_cap))
-        # self.int_tunning.cancel()
 
 
     def get_distance(self):
