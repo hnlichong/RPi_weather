@@ -1,3 +1,4 @@
+#!which python3
 from datetime import datetime, timedelta  
 import time  
 from collections import namedtuple  
@@ -9,10 +10,16 @@ import os
 from utils import my_logger
 
 logger = my_logger(__name__, level="DEBUG")
-root_path = os.path.dirname(os.path.abspath(__file__))
+try:
+    root_path = os.path.dirname(os.path.abspath(__file__))
+except:
+    root_path = '/Users/lichong/Sources/RPi_weather'
 
 
 class WeatherData(object):
+    """
+    历史气象数据获取和预处理，生成训练和测试数据集dataset
+    """
     # Weather Underground API
     # API_KEY: The API_KEY that Weather Underground provides with your account
     # YYYYMMDD: A string representing the target date of your request
@@ -34,10 +41,8 @@ class WeatherData(object):
         data_cleaned = data_ + '_cleaned.csv'
         dataset = data_ + '_dataset.csv'
         self.data = os.path.join(root_path, data)
-        self.data_cleaned = os.path.join(
-            root_path, data_cleaned)
+        self.data_cleaned = os.path.join(root_path, data_cleaned)
         self.dataset = os.path.join(root_path, dataset)
-
         self.df = pd.read_csv(self.data, index_col=0, parse_dates=True)
         self.features = ['tempm', 'hum', 'pressurem']
         self.result = 'hazardous'
@@ -123,84 +128,13 @@ class WeatherData(object):
             self.X, self.y, test_size=0.2, random_state=12)
         df.to_csv(self.dataset)
         self.df = df
-        return
+        return self.X_train, self.X_test, self.y_train, self.y_test 
 
-    def logistic_regression(self):
-        from sklearn.linear_model import LogisticRegression  
-        # instantiate the classifier
-        clf = LogisticRegression(random_state=42, max_iter=100)
-
-        # trainning
-        clf.fit(self.X_train, self.y_train)
-
-        # make a prediction set using the test set
-        prediction = clf.predict(self.X_test)
-
-        # Evaluate the prediction accuracy of the model
-        from sklearn.metrics import mean_absolute_error, median_absolute_error  
-        print("The Explained Variance: %.4f" % clf.score(self.X_test, self.y_test))  
-        # print("The Mean Absolute Error: %.2f degrees celsius" %
-        #     mean_absolute_error(self.y_test, prediction))  
-        # print("The Median Absolute Error: %.2f degrees celsius" %
-        #     median_absolute_error(self.y_test, prediction))  
-
-    def knn(self):
-        from sklearn.neighbors import KNeighborsClassifier
-        n_neighbors = 15
-        # weights = 'uniform'
-        weights = 'distance'
-        # we create an instance of Neighbours Classifier and fit the data.
-        clf = KNeighborsClassifier(n_neighbors, weights=weights)
-        clf.fit(self.X_train, self.y_train)
-        prediction = clf.predict(self.X_test)
-        print("The Explained Variance: %.4f" % clf.score(self.X_test, self.y_test))  
-    
-
-    def svm(self):
-        from sklearn import svm
-        clf = svm.SVC(gamma=0.001, C=100.)
-        clf.fit(self.X_train, self.y_train)
-        prediction = clf.predict(self.X_test)
-        print("The Explained Variance: %.4f" % clf.score(self.X_test, self.y_test))  
-        
-
-    def rnn(self):
-        from sklearn.model_selection import train_test_split 
-        
-        # split dataset into training(80%), validation(10%), testing(10%)
-        X_train, X_tmp, y_train, y_tmp = train_test_split(
-            self.X, self.y, test_size=0.2, random_state=23)
-        X_val, X_test, y_val, y_test = train_test_split(
-            X_tmp, y_tmp, test_size=0.5, random_state=23)
-        print("Training instances   {}, Training features   {}".format(X_train.shape[0], X_train.shape[1]))  
-        print("Validation instances {}, Validation features {}".format(X_val.shape[0], X_val.shape[1]))  
-        print("Testing instances    {}, Testing features    {}".format(X_test.shape[0], X_test.shape[1]))
-
-    #
-    # def tree(self):
-    #     from sklearn import tree
-    #
-    #     # Assumed you have, X (predictor) and Y (target) for training data set and x_test(predictor) of test_dataset
-    #     # Create tree object
-    #     model = tree.DecisionTreeClassifier(
-    #         criterion='gini')  # for classification, here you can change the algorithm as gini or entropy (information gain) by default it is gini
-    #
-    #     # model = tree.DecisionTreeRegressor() for regression
-    #     # Train the model using the training sets and check score
-    #     model.fit(X, y)
-    #     model.score(X, y)
-    #
-    #     # Predict Output
-    #     predicted = model.predict(x_test)
-    
+    def get_dataset(self):
+        wd = WeatherData()
+        wd.clean_data()
+        # wd.add_features()
+        return wd.split_dataset()
 
 
 
-
-if __name__ == '__main__':
-    wd = WeatherData()
-    wd.clean_data()
-    # wd.add_features()
-    wd.split_dataset()
-    # wd.logistic_regression()
-    wd.rnn()
