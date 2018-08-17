@@ -45,14 +45,19 @@ class Prediction(object):
 
     def knn_k(self):
         res = []
-        k_range = range(31, 51)
-        fold = 10
+        k_range = range(1, 31)
+        n = 10
         for k in k_range:
-            self.clf = KNeighborsClassifier(n_neighbors=k, weights='uniform', metric='euclidean')
-            res.append(
-                sum(cross_val_score(self.clf, self.X, self.y, cv=fold))/fold
-            )
-            # print('n = %s, variance = %.2f' % (k, res[-1]))
+            r = []
+            for i in range(n):
+                self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+                    self.X, self.y, test_size=0.2, random_state=12)
+                self.clf = KNeighborsClassifier(n_neighbors=k, weights='uniform', metric='euclidean')
+                self.clf.fit(self.X_train, self.y_train)
+                r.append(
+                  self.clf.score(self.X_test, self.y_test)
+                )
+            res.append(sum(r)/len(r))
         # plt.scatter(y[:, 0], y[:, 1], marker='o')
         plt.plot(k_range, res, 'bo-')
         print(res)
@@ -61,6 +66,24 @@ class Prediction(object):
         plt.xlabel('K value')
         plt.ylabel('Test accuracy')
         plt.show()
+
+
+    def k_fold(self):
+        res = []
+        k_range = range(100, 120)
+        fold = 10
+        for k in k_range:
+            self.clf = KNeighborsClassifier(n_neighbors=k, weights='uniform', metric='euclidean')
+            # 10次10折交叉验证
+            ress = []
+            for i in range(10):
+                ress.append(
+                    sum(cross_val_score(self.clf, self.X, self.y, cv=fold))/fold
+                )
+            res.append(
+                sum(ress)/len(ress)
+            )
+            # print('n = %s, variance = %.2f' % (k, res[-1]))
 
     def predict(self):
         self.clf.predict(self.X_test)
