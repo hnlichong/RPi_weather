@@ -5,10 +5,17 @@ from sklearn import svm
 from sklearn import tree
 import graphviz 
 from weather_data import WeatherData
+import matplotlib.pyplot as plt
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
 
 class Prediction(object):
-    def __init__(self, dataset):
-        self.X_train, self.X_test, self.y_train, self.y_test = dataset
+    def __init__(self, X, y):
+        self.X = X
+        self.y = y
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            self.X, self.y, test_size=0.2, random_state=12)
+
 
     def logistic_regression(self):
         # instantiate the classifier
@@ -26,18 +33,38 @@ class Prediction(object):
         # print("The Mean Absolute Error: %.2f degrees celsius" %
         #     mean_absolute_error(self.y_test, prediction))  
         # print("The Median Absolute Error: %.2f degrees celsius" %
-        #     median_absolute_error(self.y_test, prediction))  
+        #     median_absolute_error(self.y_test, prediction))
+
 
     def knn(self):
-        n_neighbors = 15
-        # weights = 'uniform'
-        weights = 'distance'
         # we create an instance of Neighbours Classifier and fit the data.
-        clf = KNeighborsClassifier(n_neighbors, weights=weights)
+        clf = KNeighborsClassifier(n_neighbors=15, weights='uniform', metric='euclidean')
         clf.fit(self.X_train, self.y_train)
         prediction = clf.predict(self.X_test)
-        print("The Explained Variance: %.4f" % clf.score(self.X_test, self.y_test))  
+        print("The Explained Variance: %.4f" % clf.score(self.X_test, self.y_test))
 
+    def knn_k(self):
+        res = []
+        k_range = range(31, 51)
+        fold = 10
+        for k in k_range:
+            self.clf = KNeighborsClassifier(n_neighbors=k, weights='uniform', metric='euclidean')
+            res.append(
+                sum(cross_val_score(self.clf, self.X, self.y, cv=fold))/fold
+            )
+            # print('n = %s, variance = %.2f' % (k, res[-1]))
+        # plt.scatter(y[:, 0], y[:, 1], marker='o')
+        plt.plot(k_range, res, 'bo-')
+        print(res)
+        plt.grid(True)
+        plt.axis('tight')
+        plt.xlabel('K value')
+        plt.ylabel('Test accuracy')
+        plt.show()
+
+    def predict(self):
+        self.clf.predict(self.X_test)
+        print("The Explained Variance: %.4f" % self.clf.score(self.X_test, self.y_test))
 
     def svm(self):
         clf = svm.SVC(gamma=0.001, C=100.)
@@ -73,6 +100,7 @@ class Prediction(object):
 
 
 if __name__ == '__main__':
-    dataset = WeatherData().get_dataset()
-    pred = Prediction(dataset)
-    pred.svm()
+    wd = WeatherData()
+    pred = Prediction(
+        X=wd.X, y=wd.y)
+    pred.knn_k()

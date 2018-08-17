@@ -1,5 +1,5 @@
-#!which python3
-from datetime import datetime, timedelta  
+#! /usr/bin/env python3
+from datetime import datetime, timedelta
 import time  
 from collections import namedtuple  
 import pandas as pd
@@ -46,6 +46,9 @@ class WeatherData(object):
         self.df = pd.read_csv(self.data, index_col=0, parse_dates=True)
         self.features = ['tempm', 'hum', 'pressurem']
         self.result = 'hazardous'
+
+        self.clean_data()
+        self.split_dataset()
             
     def collect_data(self, end_date, days):  
         records = []
@@ -128,13 +131,6 @@ class WeatherData(object):
             self.X, self.y, test_size=0.2, random_state=12)
         df.to_csv(self.dataset)
         self.df = df
-        return self.X_train, self.X_test, self.y_train, self.y_test 
-
-    def get_dataset(self):
-        wd = WeatherData()
-        wd.clean_data()
-        # wd.add_features()
-        return wd.split_dataset()
 
 
 
