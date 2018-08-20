@@ -89,7 +89,7 @@ class WeatherData(object):
         xvalues = xvalues.replace(-999, np.nan)
         df[self.features] = xvalues
 
-        # remove unknown weather condition
+        # remove unknown tree condition
         df['conds'] = df['conds'].str.strip().str.lower().replace('unknown', np.nan)
         # drop all np.nan
         df = df.dropna()

@@ -1,0 +1,17 @@
+digraph Tree {
+node [shape=box, style="filled, rounded", color="black", fontname=helvetica] ;
+edge [fontname=helvetica] ;
+0 [label=<hum &le; 85.0<br/>entropy = 0.651<br/>samples = 39464<br/>value = [32878, 6586]<br/>class = no rain>, fillcolor="#e58139cc"] ;
+1 [label=<hum &le; 70.5<br/>entropy = 0.288<br/>samples = 28856<br/>value = [27400, 1456]<br/>class = no rain>, fillcolor="#e58139f1"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label=<entropy = 0.087<br/>samples = 17335<br/>value = [17145, 190]<br/>class = no rain>, fillcolor="#e58139fc"] ;
+1 -> 2 ;
+3 [label=<entropy = 0.5<br/>samples = 11521<br/>value = [10255, 1266]<br/>class = no rain>, fillcolor="#e58139e0"] ;
+1 -> 3 ;
+4 [label=<hum &le; 91.0<br/>entropy = 0.999<br/>samples = 10608<br/>value = [5478, 5130]<br/>class = no rain>, fillcolor="#e5813910"] ;
+0 -> 4 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+5 [label=<entropy = 0.916<br/>samples = 4762<br/>value = [3184, 1578]<br/>class = no rain>, fillcolor="#e5813981"] ;
+4 -> 5 ;
+6 [label=<entropy = 0.966<br/>samples = 5846<br/>value = [2294, 3552]<br/>class = rain>, fillcolor="#399de55a"] ;
+4 -> 6 ;
+}

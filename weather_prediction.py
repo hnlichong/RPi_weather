@@ -1,4 +1,8 @@
 #! /usr/bin/env python3
+from inspect import isfunction
+from math import exp, sqrt, pi
+from numpy import mean, std
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import svm
@@ -9,13 +13,9 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 
-class Prediction(object):
-    def __init__(self, X, y):
-        self.X = X
-        self.y = y
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-            self.X, self.y, test_size=0.2, random_state=12)
-
+class Prediction(WeatherData):
+    def __init__(self):
+        super().__init__()
 
     def logistic_regression(self):
         # instantiate the classifier
@@ -35,6 +35,29 @@ class Prediction(object):
         # print("The Median Absolute Error: %.2f degrees celsius" %
         #     median_absolute_error(self.y_test, prediction))
 
+    def logistic_alpha(self):
+        res = []
+        alphas = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1]
+        n = 10
+        for alpha in alphas:
+            r = []
+            for i in range(n):
+                self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+                    self.X, self.y, test_size=0.2, random_state=12)
+                self.clf = LogisticRegression(C=1/alpha)
+                self.clf.fit(self.X_train, self.y_train)
+                r.append(
+                  self.clf.score(self.X_test, self.y_test)
+                )
+            res.append(sum(r)/len(r))
+        # plt.scatter(y[:, 0], y[:, 1], marker='o')
+        plt.plot(alphas, res, 'bo-')
+        print(res)
+        plt.grid(True)
+        plt.axis('tight')
+        plt.xlabel('alpha')
+        plt.ylabel('Test accuracy')
+        plt.show()
 
     def knn(self):
         # we create an instance of Neighbours Classifier and fit the data.
@@ -67,6 +90,59 @@ class Prediction(object):
         plt.ylabel('Test accuracy')
         plt.show()
 
+    def knn_metric(self):
+        metrics = ['euclidean', 'manhattan', 'chebyshev']
+        res = {}
+        n = 10
+        k = 15
+        for met in metrics:
+            r = []
+            for i in range(n):
+                self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+                    self.X, self.y, test_size=0.2, random_state=12)
+                self.clf = KNeighborsClassifier(n_neighbors=k, weights='uniform', metric=met)
+                self.clf.fit(self.X_train, self.y_train)
+                r.append(
+                    self.clf.score(self.X_test, self.y_test)
+                )
+            res[met] = sum(r)/len(r)
+        print(res)
+
+    def knn_weights(self):
+        def minus_equation(li):
+            res = []
+            for val in li:
+                res.append(1-val)
+                # if val < 1:
+                #     res.append(1-val)
+                # else:
+                #     res.append(0)
+            return res
+        def gaussian(xx):
+            yy = []
+            sigma = std(xx)
+            mu = mean(xx)
+            for x in xx:
+                k = 1 / sigma / sqrt(2 * pi)
+                y = k * exp(-pow(x - mu, 2) / 2 / sigma)
+                yy.append(y)
+            return yy
+
+        weights = ['uniform', 'distance', minus_equation, gaussian]
+        res = {}
+        n = 10
+        for wei in weights:
+            r = []
+            for i in range(n):
+                self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+                    self.X, self.y, test_size=0.2, random_state=12)
+                self.clf = KNeighborsClassifier(n_neighbors=15, weights=wei, metric='euclidean')
+                self.clf.fit(self.X_train, self.y_train)
+                r.append(
+                    self.clf.score(self.X_test, self.y_test)
+                )
+            res[wei if not isfunction(wei) else wei.__name__] = sum(r) / len(r)
+        print(res)
 
     def k_fold(self):
         res = []
@@ -108,22 +184,39 @@ class Prediction(object):
         print("Validation instances {}, Validation features {}".format(X_val.shape[0], X_val.shape[1]))  
         print("Testing instances    {}, Testing features    {}".format(X_test.shape[0], X_test.shape[1]))
 
-    def tree(self):
+    def tree(self, max_depth=None, min_samples_leaf=1):
         # Create tree objectfor classification, here you can change the 
         # algorithm as gini or entropy (information gain) by default it is gini
-        clf = tree.DecisionTreeClassifier(criterion='gini')
+        clf = tree.DecisionTreeClassifier(criterion='entropy', max_depth=max_depth, min_samples_leaf=min_samples_leaf)
         clf.fit(self.X_train, self.y_train)
         # predict value
         prediction = clf.predict(self.X_test)
         # predict accuracy
         print("The Explained Variance: %.4f" % clf.score(self.X_test, self.y_test))  
-        # dot_data = tree.export_graphviz(clf, out_file=None) 
-        # graph = graphviz.Source(dot_data) 
-        # graph.render("weather") 
+        dot_data = tree.export_graphviz(clf, out_file=None,
+                                        feature_names=self.features,
+                                        class_names=['no rain', 'rain'],
+                                        filled = True, rounded = True,
+                                        special_characters = True)
+        graph = graphviz.Source(dot_data)
+        graph.render('tree_min_samples_leaf{}_max_depth{}'.format(min_samples_leaf, max_depth))
 
+def draw_sigmoid():
+    z = np.linspace(-5, 5, 1000)
+    g = 1 / (1 + np.exp(-z))
+    plt.plot(z, g)
+    plt.grid(True)
+    ax = plt.gca()
+    ax.spines['right'].set_color('none')
+    ax.spines['top'].set_color('none')
+    ax.spines['bottom'].set_position(('data', 0))
+    ax.spines['left'].set_position(('data', 0))
+    ax.set_xlabel('z')
+    ax.set_ylabel('g', rotation='horizontal')
+    plt.show()
 
 if __name__ == '__main__':
-    wd = WeatherData()
-    pred = Prediction(
-        X=wd.X, y=wd.y)
-    pred.knn_k()
+    # wd = WeatherData()
+    # pred = Prediction()
+    # pred.tree(max_depth=4, min_samples_leaf=1)
+    draw_sigmoid()
