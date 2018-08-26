@@ -108,6 +108,8 @@ class Prediction(WeatherData):
             res[met] = sum(r)/len(r)
         print(res)
 
+
+
     def knn_weights(self):
         def minus_equation(li):
             res = []
@@ -174,7 +176,6 @@ class Prediction(WeatherData):
 
     def rnn(self):
         from sklearn.model_selection import train_test_split 
-        
         # split dataset into training(80%), validation(10%), testing(10%)
         X_train, X_tmp, y_train, y_tmp = train_test_split(
             self.X, self.y, test_size=0.2, random_state=23)
@@ -215,8 +216,26 @@ def draw_sigmoid():
     ax.set_ylabel('g', rotation='horizontal')
     plt.show()
 
+def compare_models(X, y):
+    n = 100
+    res = {'logistic':[], 'knn':[], 'tree': []}
+    for i in range(n):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=12)
+        clf = LogisticRegression()
+        clf.fit(X_train, y_train)
+        res['logistic'].append(clf.score(X_test, y_test))
+        clf = KNeighborsClassifier(n_neighbors=15, weights='uniform', metric='euclidean')
+        clf.fit(X_train, y_train)
+        res['knn'].append(clf.score(X_test, y_test))
+        clf = tree.DecisionTreeClassifier()
+        clf.fit(X_train, y_train)
+        res['tree'].append(clf.score(X_test, y_test))
+    res['logistic'] = sum(res['logistic'])/len(res['logistic'])
+    res['knn'] = sum(res['knn'])/len(res['knn'])
+    res['tree'] = sum(res['tree'])/len(res['tree'])
+    return res
+
 if __name__ == '__main__':
-    # wd = WeatherData()
-    # pred = Prediction()
-    # pred.tree(max_depth=4, min_samples_leaf=1)
-    draw_sigmoid()
+    wd = WeatherData()
+    res = compare_models(wd.X, wd.y)
+    print(res)
