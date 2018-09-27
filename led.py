@@ -30,3 +30,18 @@ class LED(object):
     def all_off(self):
         for color in LED.LEDs:
             self.off(color)
+
+if __name__ == '__main__':
+    import pigpio
+    import time
+    pi = pigpio.pi()
+    if not pi.connected:
+        print(u'pi is not connected by pigpio daemon')
+        exit()
+    led = LED(pi)
+    led.all_on()
+    # led.on('RED')
+    time.sleep(3)
+    # led.on('YELLOW')
+    # led.on('GREEN')
+    # led.all_off()
