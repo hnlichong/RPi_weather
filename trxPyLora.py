@@ -22,9 +22,9 @@ while True:
     PyLora.receive()   # put into receive mode
     while not PyLora.packet_available():
         # wait for a package
-        led.off(u'RED')
+        led.off(u'GREEN')
         time.sleep(0)
     rec = PyLora.receive_packet()
     print u'Packet received: {}'.format(rec)
-    led.on(u'RED')
+    led.on(u'GREEN')
 

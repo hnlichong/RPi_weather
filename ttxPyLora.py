@@ -1,10 +1,12 @@
 import PyLora
-import time
+from datetime import datetime
+from time import sleep
 PyLora.init()
 PyLora.set_frequency(433000000)
 PyLora.enable_crc()
 while True:
-    msg = u'time: %s' % time.time()
+    now = datetime.now().strftime('%Y%m%d%H%M%S')
+    msg = u'time: %s' % now
     PyLora.send_packet(msg.encode())
     print u'Packet sent: %s' % msg
-    time.sleep(1)
+    sleep(1)
