@@ -20,6 +20,7 @@ from ms8607 import MS8607
 from as3935 import AS3935
 from up501 import UP501
 from time import sleep
+from time import time
 from led import LED
 import pigpio
 from threading import Timer
@@ -59,6 +60,25 @@ def main():
     lightning_fields = ['datetime', 'events', 'distance(KM)']
     os.makedirs(env_path, exist_ok=True)
     os.makedirs(lightning_path, exist_ok=True)
+
+    def write_row_env():
+        temperatue, pressure = ms8607.get_temperature_pressure()
+        humidity = ms8607.get_humidity()
+        now = datetime.now()
+        data = [now.strftime('%Y%m%d%H%M%S'), temperatue, humidity, pressure]
+        logger.debug(data)
+        # write into file
+        f_name = now.strftime('%Y%m%d') + '.csv'
+        f_path = os.path.join(env_path, f_name)
+        if not os.path.exists(f_path):
+            with open(f_path, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(env_fields)
+                writer.writerow(data)
+        else:
+            with open(f_path, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(data)
 
     def env_monitor(time):
         # nonlocal env_path, env_fields
@@ -105,9 +125,8 @@ def main():
                 writer = csv.writer(f)
                 writer.writerow(data)
         Timer(time, lightning_monitor, [time]).start()
-
     env_monitor(60)
-    lightning_monitor(1)
+    # lightning_monitor(1)
 
     while 1:
         pass
