@@ -12,6 +12,7 @@ from weather_data import WeatherData
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
+import pickle
 
 class Prediction(WeatherData):
     def __init__(self):
@@ -217,6 +218,9 @@ def draw_sigmoid():
     plt.show()
 
 def compare_models(X, y):
+    """ 比较模型
+    使用相同的数据集进行模型训练和预测，比较测试精度
+    """
     n = 100
     res = {'logistic':[], 'knn':[], 'tree': []}
     for i in range(n):
@@ -235,7 +239,37 @@ def compare_models(X, y):
     res['tree'] = sum(res['tree'])/len(res['tree'])
     return res
 
-if __name__ == '__main__':
-    wd = WeatherData()
+def export_model(clf, name):
+    """ 导出模型，序列化模型 """
+    # 保存成python支持的文件格式pickle, 在当前目录下可以看到
+    with open('%s.pickle' % name, 'wb') as fw:
+        pickle.dump(clf, fw)
+
+def do_compare_models():
+    # 比较模型
+    # wd = WeatherData()
     res = compare_models(wd.X, wd.y)
     print(res)
+
+def do_export_model():
+    # 最优模型是knn分类器，模型参数如下
+    clf = KNeighborsClassifier(n_neighbors=15, weights='uniform', metric='euclidean')
+    # 训练模型
+    wd = WeatherData()
+    clf.fit(wd.X, wd.y)
+    # 导出模型，用于在RPi Zero中导入
+    export_model(clf, 'knn')
+
+def test_model_import():
+    # 测试导出的模型再导入是否正确
+    with open('knn.pickle', 'rb') as fr:
+        clf = pickle.load(fr)
+        wd = WeatherData()
+        res = clf.score(wd.X, wd.y)
+        print('import model, score: ', res)
+
+if __name__ == '__main__':
+    # do_compare_models()
+    # do_export_model()
+    # test_model_import()
+    pass
