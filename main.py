@@ -14,6 +14,7 @@ if not pi.connected:
 pi.stop()
 """
 import csv
+import pickle
 from datetime import datetime
 
 from ms8607 import MS8607
@@ -140,6 +141,14 @@ def main():
     # stop pi
     pi.stop()
 
+def import_model():
+    with open('knn.pickle', 'rb') as fr:
+        clf = pickle.load(fr)
+        res = clf.predict([22.2, 92.2, 1000.1])
+        import pdb; pdb.set_trace()
+        print('import model, predict res:  ', res)
+
 
 if __name__ == '__main__':
-    main()
+    # main()
+    import_model()
