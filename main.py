@@ -64,7 +64,7 @@ def main():
         exit()
     led = LED(pi)
     led.all_off()
-    led.on('GREEN')
+    led.on('YELLOW')
     ms8607 = MS8607()
     as3935 = AS3935(pi)
 
@@ -105,7 +105,7 @@ def main():
         Timer(time, lightning_monitor, [time]).start()
 
     env_monitor(60)
-    lightning_monitor(1)
+    lightning_monitor(60)
 
     while 1:
         pass

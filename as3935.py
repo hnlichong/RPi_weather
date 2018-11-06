@@ -83,7 +83,7 @@ class AS3935(object):
             self.led.on('YELLOW')
 
         sleep(0.5)
-        self.led.all_off()
+        # self.led.all_off()
 
     def read(self, register):
         register = 0x40|register
