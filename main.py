@@ -42,6 +42,19 @@ def read_environment():
                                                                                                    humidity))
         sleep(1)
 
+def append_data_to_file(data, row_fields, path, now = datetime.now()):
+    f_name = now.strftime('%Y%m%d') + '.csv'
+    f_path = os.path.join(path, f_name)
+    if not os.path.exists(f_path):
+        with open(f_path, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(row_fields)
+            writer.writerow(data)
+    else:
+        with open(f_path, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(data)
+
 
 def main():
     # init
@@ -51,6 +64,7 @@ def main():
         exit()
     led = LED(pi)
     led.all_off()
+    led.on('GREEN')
     ms8607 = MS8607()
     as3935 = AS3935(pi)
 
@@ -61,25 +75,6 @@ def main():
     lightning_fields = ['datetime', 'events', 'distance(KM)']
     os.makedirs(env_path, exist_ok=True)
     os.makedirs(lightning_path, exist_ok=True)
-
-    def write_row_env():
-        temperatue, pressure = ms8607.get_temperature_pressure()
-        humidity = ms8607.get_humidity()
-        now = datetime.now()
-        data = [now.strftime('%Y%m%d%H%M%S'), temperatue, humidity, pressure]
-        logger.debug(data)
-        # write into file
-        f_name = now.strftime('%Y%m%d') + '.csv'
-        f_path = os.path.join(env_path, f_name)
-        if not os.path.exists(f_path):
-            with open(f_path, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow(env_fields)
-                writer.writerow(data)
-        else:
-            with open(f_path, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow(data)
 
     def env_monitor(time):
         # nonlocal env_path, env_fields
@@ -92,17 +87,8 @@ def main():
         # led.off('GREEN')
 
         # write into file
-        f_name = now.strftime('%Y%m%d') + '.csv'
-        f_path = os.path.join(env_path, f_name)
-        if not os.path.exists(f_path):
-            with open(f_path, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow(env_fields)
-                writer.writerow(data)
-        else:
-            with open(f_path, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow(data)
+        # append_data_to_file(data, env_fields, env_path, now)
+
         Timer(time, env_monitor, [time]).start()
 
     def lightning_monitor(time):
@@ -114,20 +100,12 @@ def main():
         # led.off('GREEN')
 
         # write into file
-        f_name = now.strftime('%Y%m%d') + '.csv'
-        f_path = os.path.join(lightning_path, f_name)
-        if not os.path.exists(f_path):
-            with open(f_path, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow(lightning_fields)
-                writer.writerow(data)
-        else:
-            with open(f_path, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow(data)
+        # append_data_to_file(data, lightning_fields, lightning_path, now)
+
         Timer(time, lightning_monitor, [time]).start()
+
     env_monitor(60)
-    # lightning_monitor(1)
+    lightning_monitor(1)
 
     while 1:
         pass
