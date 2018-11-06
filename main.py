@@ -20,11 +20,9 @@ from datetime import datetime
 from ms8607 import MS8607
 from as3935 import AS3935
 from up501 import UP501
-from time import sleep
-from time import time
+from time import time, sleep
 from led import LED
 import pigpio
-from threading import Timer
 from utils import my_logger
 import os
 
@@ -76,38 +74,29 @@ def main():
     os.makedirs(env_path, exist_ok=True)
     os.makedirs(lightning_path, exist_ok=True)
 
-    def env_monitor(time):
+    def env_monitor():
         # nonlocal env_path, env_fields
-        # led.on('GREEN')
         temperatue, pressure = ms8607.get_temperature_pressure()
         humidity = ms8607.get_humidity()
         now = datetime.now()
         data = [now.strftime('%Y%m%d%H%M%S'), temperatue, humidity, pressure]
         logger.debug(data)
-        # led.off('GREEN')
-
         # write into file
-        # append_data_to_file(data, env_fields, env_path, now)
+        append_data_to_file(data, env_fields, env_path, now)
 
-        Timer(time, env_monitor, [time]).start()
-
-    def lightning_monitor(time):
+    def lightning_monitor():
         distance = as3935.get_distance()
         events = as3935.get_INT()
         now = datetime.now()
         data = [now.strftime('%Y%m%d%H%M%S'), events, distance]
         logger.debug(data)
-        # led.off('GREEN')
-
         # write into file
-        # append_data_to_file(data, lightning_fields, lightning_path, now)
-
-        Timer(time, lightning_monitor, [time]).start()
-
-    env_monitor(60)
-    lightning_monitor(60)
+        append_data_to_file(data, lightning_fields, lightning_path, now)
 
     while 1:
+        env_monitor()
+        lightning_monitor()
+        sleep(60)
         pass
 
     # up501 = UP501(pi)
