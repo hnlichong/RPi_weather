@@ -242,7 +242,7 @@ def compare_models(X, y):
 def export_model(clf, name):
     """ 导出模型，序列化模型 """
     # 保存成python支持的文件格式pickle, 在当前目录下可以看到
-    with open('%s.pickle' % name, 'wb') as fw:
+    with open(name, 'wb') as fw:
         pickle.dump(clf, fw)
 
 def do_compare_models():
@@ -258,7 +258,7 @@ def do_export_model():
     wd = WeatherData()
     clf.fit(wd.X, wd.y)
     # 导出模型，用于在RPi Zero中导入
-    export_model(clf, 'knn')
+    export_model(clf, 'knn.pickle')
 
 def test_model_import():
     # 测试导出的模型再导入是否正确
@@ -270,6 +270,6 @@ def test_model_import():
 
 if __name__ == '__main__':
     # do_compare_models()
-    # do_export_model()
+    do_export_model()
     # test_model_import()
     pass

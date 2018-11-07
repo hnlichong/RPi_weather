@@ -7,5 +7,5 @@ def import_model():
         res = clf.predict([22.2, 92.2, 1000.1])
         print('import model, predict res:  ', res)
 
-if __name__ == 'main':
+if __name__ == '__main__':
     import_model()
