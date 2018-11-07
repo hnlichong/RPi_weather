@@ -20,8 +20,8 @@ from datetime import datetime
 from ms8607 import MS8607
 from as3935 import AS3935
 from up501 import UP501
-from time import time, sleep
-from led import LED
+from time import sleep
+from led import led
 import pigpio
 from utils import my_logger
 import os
@@ -60,8 +60,6 @@ def main():
     if not pi.connected:
         print('pi is not connected by pigpio daemon')
         exit()
-    led = LED(pi)
-    led.all_off()
     led.on('YELLOW')
     ms8607 = MS8607()
     as3935 = AS3935(pi)
@@ -93,7 +91,7 @@ def main():
         # write into file
         append_data_to_file(data, lightning_fields, lightning_path, now)
 
-    while 1:
+    while True:
         env_monitor()
         lightning_monitor()
         sleep(60)

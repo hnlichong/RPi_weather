@@ -15,6 +15,8 @@ class LED(object):
         self.pi = pi
         for color, pin in LED.LEDs.items():
             self.pi.set_mode(pin, pigpio.OUTPUT)
+            # default off
+            self.pi.write(pin, LED.OFF)
 
     def on(self, color):
         self.pi.write(LED.LEDs[color], LED.ON)
