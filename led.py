@@ -1,4 +1,4 @@
-from time import sleep
+#! /usr/bin/env python3
 import pigpio
 
 class LED(object):
@@ -30,21 +30,11 @@ class LED(object):
         for color in LED.LEDs:
             self.off(color)
 
+
 # 单例模式
 pi = pigpio.pi()
+if not pi.connected:
+    print('pi is not connected by pigpio daemon')
+    exit()
 led = LED(pi)
 
-if __name__ == '__main__':
-    import pigpio
-    import time
-    pi = pigpio.pi()
-    if not pi.connected:
-        print(u'pi is not connected by pigpio daemon')
-        exit()
-    led = LED(pi)
-    led.all_on()
-    # led.on('RED')
-    time.sleep(3)
-    # led.on('YELLOW')
-    # led.on('GREEN')
-    # led.all_off()

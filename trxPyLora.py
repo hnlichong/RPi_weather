@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 import PyLora
 import time
 from led import led
@@ -12,10 +14,13 @@ while True:
         # wait for a package
         led.off(u'GREEN')
         time.sleep(0)
-    rec = PyLora.receive_packet()
+    pkt = PyLora.receive_packet()
     rssi = PyLora.packet_rssi()
     snr = PyLora.packet_snr()
-    print u'Packet received: {}'.format(rec)
-    print u'RSSI: {}, SNR: {}'.format(rssi, snr)
+    msg = u'packet: {} \nRSSI: {}, SNR: {}\n' .format(pkt, rssi, snr)
+    print msg
     led.on(u'GREEN')
+    fo = open('./lora_data/rx', 'a')
+    fo.write(msg)
+    fo.close()
 
