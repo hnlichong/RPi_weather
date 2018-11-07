@@ -15,7 +15,6 @@ if not pi.connected:
 pi.stop()
 """
 import csv
-import pickle
 from datetime import datetime
 
 from ms8607 import MS8607
