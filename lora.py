@@ -3,8 +3,9 @@ import wiringpi
 import utils
 
 CHANNEL = 0
-SPI0_CE0 = 10
-RESET = 7
+SPI0_CE0 = 8
+RESET = 4
+IRQ = 17
 
 # init wiringPi
 wiringpi.wiringPiSetup()
