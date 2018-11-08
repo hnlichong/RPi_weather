@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import csv
+import pickle
 from datetime import datetime
 
 from sx1278 import sx1278
@@ -38,9 +39,12 @@ def append_data_to_file(data, row_fields, path, now = datetime.now()):
             writer.writerow(data)
 
 def send_SOS():
+    """报警，红灯闪烁，发送位置信息"""
+    led.on('RED')
     gps = up501.read()
     sx1278.send_str(gps)
     logger.debug('send_SOS ok!')
+    led.off('RED')
 
 def send_SOS_repeat(times):
     return [send_SOS() for i in range(times)]
@@ -50,9 +54,27 @@ def send_SOS_repeat_gen(times):
         send_SOS_repeat(times)
     return wrapper
 
+def import_model():
+    """
+    example:
+        res = clf.predict([22.2, 92.2, 1000.1])
+    """
+    clf = None
+    with open('knn.pickle', 'rb') as fr:
+        clf = pickle.load(fr)
+    return clf
+
 def main():
     # 系统启动后黄灯亮
     led.on('YELLOW')
+
+    # 导入预测模型
+    clf = import_model()
+    if clf is None:
+        raise Exception('模型导入失败！')
+
+    # 报警函数, 重复5次
+    sos_cb = send_SOS_repeat_gen(5)
 
     # 记录环境数据
     env_path = os.path.join(root_path, 'env_data')
@@ -71,6 +93,12 @@ def main():
         logger.debug(data)
         # write into file
         append_data_to_file(data, env_fields, env_path, now)
+        # 预测是否下雨, 是则报警
+        res = clf.predict([temperatue, humidity, pressure])
+        if res:
+            logger.debug('下雨！')
+            sos_cb()
+
 
     def lightning_monitor():
         distance = as3935.get_distance()
@@ -81,14 +109,15 @@ def main():
         # write into file
         append_data_to_file(data, lightning_fields, lightning_path, now)
 
+
     # 绑定事件
-    as3935.lightning_cbs.append(send_SOS_repeat_gen(5))
+    # 如有闪电发生，则报警
+    as3935.lightning_cbs.append(sos_cb)
 
     # 执行循环监控任务
     while True:
-        # env_monitor()
+        env_monitor()
         lightning_monitor()
-        # up501.read()
         sleep(5)
         pass
 

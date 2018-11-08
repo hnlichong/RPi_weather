@@ -74,10 +74,6 @@ class AS3935(object):
         elif res == 0x01:
             # INT_NH: Noise level too high
             logger.debug('Noise level too high!')
-            for cb in self.lightning_cbs:
-                if callable(cb):
-                    cb()
-
 
     def read(self, register):
         register = 0x40|register

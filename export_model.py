@@ -16,7 +16,7 @@ def do_export_model():
     export_model(clf, 'knn.pickle')
 
 def export_model(clf, name):
-    """ 导出模型，序列化模型 """
+    """ 导出模型 """
     # 保存成python支持的文件格式pickle, 在当前目录下可以看到
     with open(name, 'wb') as fw:
         pickle.dump(clf, fw)
