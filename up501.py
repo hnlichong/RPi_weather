@@ -15,30 +15,38 @@ class UP501(object):
         self.pi.set_mode(UP501.PPS, pigpio.INPUT)
         self.pi.set_mode(UP501.TXD, pigpio.INPUT)
         self.pi.set_mode(UP501.RXD, pigpio.OUTPUT)
-        import pdb; pdb.set_trace()
-        self.pi.bb_serial_read_close(UP501.TXD)
-        
-    def bb(self):
+
+    def disable(self):
+        pass
+
+    def read(self):
         status = self.pi.bb_serial_read_open(UP501.TXD, 9600, 8)
-        while 1:
+        while True:
             (count, data) = self.pi.bb_serial_read(UP501.TXD)
             sleep(1)
             if count > 0:
                 break
-        # res = data.decode()
-        res = data
-        logger.debug('bb serial read {}'.format(res))
         self.pi.bb_serial_read_close(UP501.TXD)
+        res = ''
+        try:
+            res = data.decode()
+        except:
+            pass
+        logger.debug(res)
         return res
 
-    def get_GPS(self):
-        res = self.bb()
-        lines = res.splitlines()
+    def parse(self):
+        ret = []
+        lines = self.read().splitlines()
         for line in lines:
-            msg = pynmea2.parse(line)
-            logger.debug(msg)
-            # import pdb; pdb.set_trace()
-            # if msg.is_valid:
+            res = None
+            try:
+                res = pynmea2.parse(line)
+            except:
+                pass
+            ret.append(res)
+            logger.debug(res)
+        return ret
 
 
 # 单例模式

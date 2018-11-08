@@ -14,7 +14,7 @@ def my_logger(name, level="DEBUG"):
     # create formatter
     # formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     formatter = logging.Formatter(
-        "%(levelname)s - %(filename)s line %(lineno)s - %(funcName)s - %(message)s")
+        "%(levelname)s - %(filename)s line %(lineno)s - %(funcName)s:\n%(message)s")
     
     # add formatter to ch
     ch.setFormatter(formatter)

@@ -75,11 +75,8 @@ def main():
         pass
 
     while True:
-        up501.get_GPS()
-        sleep(10)
-    # while 1:
-    #     res = up501.bb()
-    #     print('res {}'.format(res))
+        up501.read()
+        sleep(5)
 
     # stop pi
     pi.stop()
