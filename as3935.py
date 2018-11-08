@@ -45,13 +45,9 @@ class AS3935(object):
         self.write(0x01, 0b100000)
         self.write(0x02, 0b11000000)
 
-        # init IRQ for interrupts
-        # set IRQ pull down as default status, as IRQ goes high for interrupts
-        # self.pi.set_pull_up_down(AS3935.IRQ, pigpio.PUD_DOWN)
-
         # init lightning interrupt
-        self.int = self.pi.callback(
-            AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
+        # self.int = self.pi.callback(
+        #     AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
         sleep(0.5)
         # read INT register once to reset IRQ bit
         self.get_INT()
@@ -163,3 +159,10 @@ class AS3935(object):
         self.write(0, 0b11011101&res)
         return 1
 
+
+# 单例模式
+pi = pigpio.pi()
+if not pi.connected:
+    print('pi is not connected by pigpio daemon')
+    exit()
+as3935 = AS3935(pi)

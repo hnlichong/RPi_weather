@@ -1,28 +1,12 @@
 #! /usr/bin/env python3
-"""
-CODING STRUCTURE
-import pigpio
-
-# init pigpio
-pi = pigpio.pi()
-if not pi.connected:
-    print('pi is not connected by pigpio daemon')
-    exit()
-
-# main functions, instancing classes...
-
-# stop pi
-pi.stop()
-"""
 import csv
 from datetime import datetime
 
-from ms8607 import MS8607
-from as3935 import AS3935
-from up501 import UP501
+from ms8607 import ms8607
+from as3935 import as3935
+from up501 import up501
 from time import sleep
 from led import led
-import pigpio
 from utils import my_logger
 import os
 
@@ -31,7 +15,6 @@ root_path = os.path.dirname(os.path.abspath(__file__))
 
 
 def read_environment():
-    ms8607 = MS8607()
     while 1:
         temperatue, pressure = ms8607.get_temperature_pressure()
         humidity = ms8607.get_humidity()
@@ -55,14 +38,8 @@ def append_data_to_file(data, row_fields, path, now = datetime.now()):
 
 
 def main():
-    # init
-    pi = pigpio.pi()
-    if not pi.connected:
-        print('pi is not connected by pigpio daemon')
-        exit()
+    # 系统启动后黄灯亮
     led.on('YELLOW')
-    ms8607 = MS8607()
-    as3935 = AS3935(pi)
 
     # create observation task
     env_path = os.path.join(root_path, 'env_data')
@@ -91,14 +68,15 @@ def main():
         # write into file
         append_data_to_file(data, lightning_fields, lightning_path, now)
 
-    while True:
+    while False:
         env_monitor()
         lightning_monitor()
         sleep(60)
         pass
 
-    # up501 = UP501(pi)
-    # up501.get_GPS()
+    while True:
+        up501.get_GPS()
+        sleep(10)
     # while 1:
     #     res = up501.bb()
     #     print('res {}'.format(res))

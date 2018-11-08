@@ -15,6 +15,7 @@ class UP501(object):
         self.pi.set_mode(UP501.PPS, pigpio.INPUT)
         self.pi.set_mode(UP501.TXD, pigpio.INPUT)
         self.pi.set_mode(UP501.RXD, pigpio.OUTPUT)
+        import pdb; pdb.set_trace()
         self.pi.bb_serial_read_close(UP501.TXD)
         
     def bb(self):
@@ -24,7 +25,7 @@ class UP501(object):
             sleep(1)
             if count > 0:
                 break
-        res = data.decode()
+        # res = data.decode()
         res = data
         logger.debug('bb serial read {}'.format(res))
         self.pi.bb_serial_read_close(UP501.TXD)
@@ -40,5 +41,11 @@ class UP501(object):
             # if msg.is_valid:
 
 
+# 单例模式
+pi = pigpio.pi()
+if not pi.connected:
+    print('pi is not connected by pigpio daemon')
+    exit()
+up501 = UP501(pi)
 
 

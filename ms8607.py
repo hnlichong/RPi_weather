@@ -86,3 +86,6 @@ class MS8607(object):
         RH = round(RH/100, 1)
         # pprint('relative humidity = {} %RH'.format(RH))
         return RH
+
+# 单例模式
+ms8607 = MS8607()
