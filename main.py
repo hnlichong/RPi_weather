@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import csv
+import numpy as np
 import pickle
 from datetime import datetime
 
@@ -76,45 +77,50 @@ def main():
     # 报警函数, 重复5次
     sos_cb = send_SOS_repeat_gen(5)
 
-    # 记录环境数据
+    # 日志配置
     env_path = os.path.join(root_path, 'env_data')
-    env_fields = ['datetime', 'temperature(℃)', 'humidity(%)', 'pressure(mbar)']
+    env_fields = ['datetime', 'temperature(℃)', 'humidity(%)', 'pressure(mbar)', 'hazardous']
     lightning_path = os.path.join(root_path, 'lightning_data')
-    lightning_fields = ['datetime', 'events', 'distance(KM)']
+    lightning_fields = ['datetime', 'events', 'distance(KM)', 'hazardous']
     os.makedirs(env_path, exist_ok=True)
     os.makedirs(lightning_path, exist_ok=True)
 
     def env_monitor():
-        # nonlocal env_path, env_fields
+        # 读取测量数据
         temperatue, pressure = ms8607.get_temperature_pressure()
         humidity = ms8607.get_humidity()
-        now = datetime.now()
-        data = [now.strftime('%Y%m%d%H%M%S'), temperatue, humidity, pressure]
-        logger.debug(data)
-        # write into file
-        append_data_to_file(data, env_fields, env_path, now)
         # 预测是否下雨, 是则报警
-        res = clf.predict([temperatue, humidity, pressure])
+        mx = np.array([temperatue, humidity, pressure]).reshape(1, -1)
+        res = clf.predict(mx)[0]
+        # 写入日志
+        now = datetime.now()
+        data = [now.strftime('%Y%m%d%H%M%S'), temperatue, humidity, pressure, res]
+        append_data_to_file(data, env_fields, env_path, now)
+        logger.debug(data)
+        # 报警
         if res:
-            logger.debug('下雨！')
             sos_cb()
 
-
     def lightning_monitor():
+        # 读取数据
         distance = as3935.get_distance()
         events = as3935.get_INT_res()
+        res = False
+        # 闪电事件为8
+        if events == 0x08:
+            res = True
+        # 写入日志
         now = datetime.now()
-        data = [now.strftime('%Y%m%d%H%M%S'), events, distance]
-        logger.debug(data)
-        # write into file
+        data = [now.strftime('%Y%m%d%H%M%S'), events, distance, res]
         append_data_to_file(data, lightning_fields, lightning_path, now)
+        logger.debug(data)
 
 
-    # 绑定事件
+    # 绑定事件, 事件回调的实时性比定时监控更强
     # 如有闪电发生，则报警
     as3935.lightning_cbs.append(sos_cb)
 
-    # 执行循环监控任务
+    # 执行定时监控任务
     while True:
         env_monitor()
         lightning_monitor()

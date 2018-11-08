@@ -56,7 +56,6 @@ class AS3935(object):
     def _cb_int(self, gpio, level, tick):
         # read interrupt resigter to see what event happennig
         # REG0x03[3:0]
-        logger.debug('AS3935 interrupt callback')
         res = self.read_INT()
         self.INT_res = res
 

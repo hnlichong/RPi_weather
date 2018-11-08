@@ -9,3 +9,4 @@ def import_model():
 
 if __name__ == '__main__':
     import_model()
+    print('model import ok!')

@@ -24,3 +24,4 @@ def export_model(clf, name):
 
 if __name__ == '__main__':
     do_export_model()
+    print('model export ok!')
