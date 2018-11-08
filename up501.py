@@ -16,9 +16,6 @@ class UP501(object):
         self.pi.set_mode(UP501.TXD, pigpio.INPUT)
         self.pi.set_mode(UP501.RXD, pigpio.OUTPUT)
 
-    def disable(self):
-        pass
-
     def read(self):
         status = self.pi.bb_serial_read_open(UP501.TXD, 9600, 8)
         while True:

@@ -2,6 +2,7 @@
 import csv
 from datetime import datetime
 
+from sx1278 import sx1278
 from ms8607 import ms8607
 from as3935 import as3935
 from up501 import up501
@@ -36,12 +37,24 @@ def append_data_to_file(data, row_fields, path, now = datetime.now()):
             writer = csv.writer(f)
             writer.writerow(data)
 
+def send_SOS():
+    gps = up501.read()
+    sx1278.send_str(gps)
+    logger.debug('send_SOS ok!')
+
+def send_SOS_repeat(times):
+    return [send_SOS() for i in range(times)]
+
+def send_SOS_repeat_gen(times):
+    def wrapper():
+        send_SOS_repeat(times)
+    return wrapper
 
 def main():
     # 系统启动后黄灯亮
     led.on('YELLOW')
 
-    # create observation task
+    # 记录环境数据
     env_path = os.path.join(root_path, 'env_data')
     env_fields = ['datetime', 'temperature(℃)', 'humidity(%)', 'pressure(mbar)']
     lightning_path = os.path.join(root_path, 'lightning_data')
@@ -61,27 +74,23 @@ def main():
 
     def lightning_monitor():
         distance = as3935.get_distance()
-        events = as3935.get_INT()
+        events = as3935.get_INT_res()
         now = datetime.now()
         data = [now.strftime('%Y%m%d%H%M%S'), events, distance]
         logger.debug(data)
         # write into file
         append_data_to_file(data, lightning_fields, lightning_path, now)
 
-    while False:
-        env_monitor()
-        lightning_monitor()
-        sleep(60)
-        pass
+    # 绑定事件
+    as3935.lightning_cbs.append(send_SOS_repeat_gen(5))
 
+    # 执行循环监控任务
     while True:
-        up501.read()
+        # env_monitor()
+        lightning_monitor()
+        # up501.read()
         sleep(5)
-
-    # stop pi
-    pi.stop()
-
-
+        pass
 
 if __name__ == '__main__':
     main()

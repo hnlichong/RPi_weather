@@ -1,12 +1,8 @@
 from time import sleep, time
 import pigpio
 from utils import bytes_to_hex_str
-from led import LED
 from utils import my_logger
-import csv
 import os
-from datetime import datetime
-from threading import Timer
 
 logger = my_logger(__name__, level="DEBUG")
 root_path = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +16,6 @@ class AS3935(object):
 
     def __init__(self, pi):
         self.pi = pi
-        self.led = LED(self.pi)
 
         # init SPI with mode 1, 10 KHz
         try:
@@ -35,24 +30,25 @@ class AS3935(object):
         sleep(1)
 
         # choose occasion
-        self.set_outdoor()
+        self.set_outdoor() # 室外模式下 前置放大器的放大倍数低一些
         # self.set_indoor()
 
         # Antenna Tuning
         self.tunning()
 
-        # increase spike detect efficiency
-        self.write(0x01, 0b100000)
-        self.write(0x02, 0b11000000)
+        # 折衷：闪电检测效率 vs 噪声干扰抑制能力
+        self.write(0x01, 0b00100001)
+        self.write(0x02, 0b11000010)
 
         # init lightning interrupt
-        # self.int = self.pi.callback(
-        #     AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
+        self.int = self.pi.callback(
+            AS3935.IRQ, pigpio.RISING_EDGE, self._cb_int)
         sleep(0.5)
-        # read INT register once to reset IRQ bit
-        self.get_INT()
+        # 重置中断标志位
+        # 读取一次中断寄存器就会自动重置中断标志位
+        self.INT_res = self.read_INT()
 
-
+        self.lightning_cbs = []
 
     def __del__(self):
         self.pi.bb_spi_close(AS3935.CE)        
@@ -61,13 +57,15 @@ class AS3935(object):
         # read interrupt resigter to see what event happennig
         # REG0x03[3:0]
         logger.debug('AS3935 interrupt callback')
-        res = self.get_INT()
+        res = self.read_INT()
+        self.INT_res = res
 
         if res == 0x08:
             # INT_L: Lightning interrupt
-            # todo:
             logger.debug('Lightning detected!')
-            self.led.on('RED')
+            for cb in self.lightning_cbs:
+                if callable(cb):
+                    cb()
 
         elif res == 0x04:
             # INT_D: Disturber detected
@@ -76,10 +74,10 @@ class AS3935(object):
         elif res == 0x01:
             # INT_NH: Noise level too high
             logger.debug('Noise level too high!')
-            self.led.on('YELLOW')
+            for cb in self.lightning_cbs:
+                if callable(cb):
+                    cb()
 
-        sleep(0.5)
-        # self.led.all_off()
 
     def read(self, register):
         register = 0x40|register
@@ -108,6 +106,7 @@ class AS3935(object):
         # set LCO_FDIV to 11 -> Division Ratio is 128
         res = self.read(0x03)
         self.write(0x03, 0b11000000|res)
+        # 根据示波器实测得到，写死配置值
         self.LCO_target_counts = 3906 # 500 KHz / 128 = 3.90625 KHz = 3906 Hz
         # actually 3901, delta = 5, error % = 5/3906 * 100 = .128%
         
@@ -131,7 +130,6 @@ class AS3935(object):
         """
         Get the estimated distance to the head of an approaching storm. The 
         distance is updated at every single lightning event.
-
         Returns:
             0: default, no lightning detected
             -1: 'Out of range',
@@ -143,20 +141,35 @@ class AS3935(object):
             res = -1
         return res
 
-    def get_INT(self):
+    def read_INT(self):
+        """读取中断寄存器
+        注意:读取一次中断寄存器就会自动重置中断标志位
+        Returns:
+            0x08 INT_L: Lightning interrupt
+            0x04 INT_D: Disturber detected
+            0x01 INT_NH: Noise level too high
+        """
         res = self.read(0x03)
-        return res&0x0F
+        return res & 0x0F
+
+    def get_INT_res(self):
+        """读取中断寄存器，读完后清零"""
+        res = self.INT_res
+        self.INT_res = 0x00
+        return res
 
     def set_indoor(self):
         register = 0x00
         res = self.read(register)
         self.write(register, 0b11100101&res)
+        logger.debug('indoor mode')
         return 1
 
     def set_outdoor(self):
         register = 0x00
         res = self.read(register)
         self.write(0, 0b11011101&res)
+        logger.debug('outdoor mode')
         return 1
 
 
