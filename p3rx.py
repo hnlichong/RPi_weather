@@ -36,11 +36,11 @@ if __name__ == '__main__':
             # wait for a package
             led.off(u'GREEN')
         led.on(u'GREEN')
-        now = datetime.now()
-        rssi = PyLora.packet_rssi()
-        snr = PyLora.packet_snr()
-        msg = PyLora.receive_packet()
-        data = [now.strftime('%Y%m%d%H%M%S'), rssi, snr, msg]
+        now = datetime.now().strftime('%Y%m%d%H%M%S')
+        rssi = str(PyLora.packet_rssi())
+        snr = str(PyLora.packet_snr())
+        msg = PyLora.receive_packet().decode()
+        data = [now, rssi, snr, msg]
         logger.debug('datetime: {}, RSSI: {}, SNR: {}, msg: {}'.format(*data))
         with open(log_file, 'a') as fa:
             fa.write(','.join(data) + '\n')
