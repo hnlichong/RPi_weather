@@ -20,7 +20,7 @@ def csv_log_create():
     dir_path = os.path.join(root_path, 'lora_data')
     os.makedirs(dir_path, exist_ok=True)
     now = datetime.now()
-    file_name = now.strftime('%Y%m%d') + '.csv'
+    file_name = now.strftime('%Y%m%d') + '_rx.csv'
     file_path = os.path.join(dir_path, file_name)
     if not os.path.exists(file_path):
         with open(file_path, 'w') as fw:
