@@ -38,12 +38,12 @@ if __name__ == '__main__':
         now = datetime.now().strftime('%Y%m%d%H%M%S')
         temperatue, pressure = ms8607.get_temperature_pressure()
         humidity = ms8607.get_humidity()
-        data = map(str, [now, temperatue, humidity, pressure])
+        data = [str(x) for x in [now, temperatue, humidity, pressure]]
         logger.debug('datetime: {}, temperatue: {}, humidity: {}, pressure: {}'.format(*data))
         msg = ','.join(data) + '\n'
         with open(log_file, 'a') as fa:
             fa.write(msg)
         PyLora.send_packet(msg.encode())
         led.off('RED')
-        sleep(1)
+        # sleep(1)
 
