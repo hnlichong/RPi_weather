@@ -124,7 +124,7 @@ def main():
     while True:
         env_monitor()
         lightning_monitor()
-        sleep(5)
+        sleep(60)
         pass
 
 if __name__ == '__main__':
