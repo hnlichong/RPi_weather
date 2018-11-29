@@ -128,7 +128,7 @@ def main():
         env_monitor()
         lightning_monitor()
         sos_cb()
-        # sleep(5)
+        sleep(5)
         pass
 
 if __name__ == '__main__':
